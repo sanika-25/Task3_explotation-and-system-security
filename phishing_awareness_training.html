@@ -1,0 +1,87 @@
+<div>
+<h2 class="sr-only">Interactive phishing awareness training: a simulated email with four clickable red flags to identify, plus a short detection quiz.</h2>
+
+<div style="background: var(--surface-1); border-radius: 12px; padding: 1rem; max-width: 640px; margin: 0 auto;">
+  <div style="display:flex; align-items:center; gap:8px; margin-bottom: 0.75rem;">
+    <i class="ti ti-mail" style="font-size:18px; color: var(--text-secondary);" aria-hidden="true"></i>
+    <span style="font-size:13px; color: var(--text-secondary);">Simulated email — tap each numbered flag</span>
+  </div>
+
+  <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem;">
+    <div style="font-size:14px; line-height:1.6; position:relative;">
+      <div style="margin-bottom:8px;"><span style="color:var(--text-muted);">From:</span> <span id="flag1" class="flag" data-n="1">IT-Support@secure-mailcheck-verify.com</span></div>
+      <div style="margin-bottom:8px;"><span style="color:var(--text-muted);">Subject:</span> <span id="flag2" class="flag" data-n="2">Urgent: your mailbox will be suspended in 2 hours</span></div>
+      <div style="margin-bottom:8px; color:var(--text-primary);">Dear <span id="flag3" class="flag" data-n="3">Valued User</span>,</div>
+      <div style="margin-bottom:8px; color:var(--text-primary);">We detected unusual sign-in activity. To avoid losing access, verify your account now.</div>
+      <div style="margin-bottom:8px;"><span id="flag4" class="flag" data-n="4" style="text-decoration:underline; color:var(--text-accent);">Verify my account →</span></div>
+    </div>
+  </div>
+
+  <div id="explain" style="min-height:52px; margin-top:0.75rem; padding: 0.75rem 1rem; background: var(--bg-warning); border-radius: var(--radius); font-size:13px; color: var(--text-warning); display:none;"></div>
+
+  <div style="display:flex; gap:8px; margin-top:0.5rem;">
+    <div style="font-size:12px; color:var(--text-muted);">Flags found: <span id="count">0</span> / 4</div>
+  </div>
+</div>
+
+<div style="max-width:640px; margin: 1.5rem auto 0; padding-top:1rem; border-top:0.5px solid var(--border);">
+  <div style="font-size:13px; color:var(--text-secondary); margin-bottom:0.75rem;">Quick check — is this message safe?</div>
+  <div id="quizCard" style="background: var(--surface-2); border:0.5px solid var(--border); border-radius:12px; padding:1rem 1.25rem; font-size:14px;"></div>
+  <div style="display:flex; gap:8px; margin-top:0.75rem;">
+    <button id="btnPhish">This is phishing</button>
+    <button id="btnLegit">This looks legitimate</button>
+  </div>
+  <div id="quizFeedback" style="font-size:13px; margin-top:0.5rem; min-height:20px;"></div>
+</div>
+</div>
+
+<script>
+const explanations = {
+  1: "Sender domain: not a real company address — look-alike domains like this mimic trusted brands.",
+  2: "Manufactured urgency: tight deadlines pressure you to act before thinking it through.",
+  3: "Generic greeting: legitimate senders you have an account with usually know your name.",
+  4: "Suspicious link: hover before clicking — the display text can hide a different destination."
+};
+let found = new Set();
+document.querySelectorAll('.flag').forEach(el => {
+  el.style.cursor = 'pointer';
+  el.style.borderBottom = '1px dashed var(--border-danger)';
+  el.addEventListener('click', () => {
+    const n = el.dataset.n;
+    found.add(n);
+    document.getElementById('count').textContent = found.size;
+    const box = document.getElementById('explain');
+    box.style.display = 'block';
+    box.textContent = explanations[n];
+    el.style.background = 'var(--bg-danger)';
+  });
+});
+
+const quizItems = [
+  { text: "Sender: billing@yourcompany-payroll.net — Subject: Payroll update required by 3pm today. Click here to confirm your direct deposit details.", answer: "phish" },
+  { text: "Sender: notifications@github.com — Subject: New sign-in to your account from a new device. Review activity in your account security settings.", answer: "legit" },
+  { text: "Sender: security@apple-id-locked.com — Subject: Your Apple ID has been locked. Enter your password within 24 hours to restore access.", answer: "phish" },
+  { text: "Sender: hr@yourcompany.com — Subject: Reminder: open enrollment closes Friday. Details on the internal benefits portal, no login link included.", answer: "legit" }
+];
+let qi = 0;
+function loadQuiz() {
+  document.getElementById('quizCard').textContent = quizItems[qi].text;
+  document.getElementById('quizFeedback').textContent = '';
+}
+function answer(choice) {
+  const correct = quizItems[qi].answer;
+  const fb = document.getElementById('quizFeedback');
+  if (choice === correct) {
+    fb.style.color = 'var(--text-success)';
+    fb.textContent = 'Correct.';
+  } else {
+    fb.style.color = 'var(--text-danger)';
+    fb.textContent = 'Not quite — ' + (correct === 'phish' ? 'this one is phishing.' : 'this one is legitimate.');
+  }
+  qi = (qi + 1) % quizItems.length;
+  setTimeout(loadQuiz, 1400);
+}
+document.getElementById('btnPhish').addEventListener('click', () => answer('phish'));
+document.getElementById('btnLegit').addEventListener('click', () => answer('legit'));
+loadQuiz();
+</script>
